@@ -50,3 +50,27 @@
         mode: "u=rw,g=r,o=r"
         directory_mode: "u=rwx,g=rx,o=rx"
       become: "yes"
+
+    - name: Activate theme
+      ansible.builtin.lineinfile:
+        path: /etc/plymouth/plymouthd.conf
+        regexp: '^Theme='
+        line: 'Theme=gazeto-plymouth-theme'
+      become: "yes"
+
+    - name: Copy splashscreen service file
+      ansible.builtin.copy:
+        src: splashscreen.service
+        dest: /etc/systemd/system/splashscreen.service
+        force: "true"
+        owner: root
+        group: root
+        mode: "u=rw,g=r,o=r"
+      become: "yes"
+
+    - name: Activate splashscreen service
+      ansible.builtin.systemd_service:
+        name: "splashscreen.service"
+        daemon_reload: true
+        enabled: "true"
+      become: "yes"
