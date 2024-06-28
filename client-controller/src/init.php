@@ -1,0 +1,67 @@
+<?php
+
+declare(strict_types=1);
+
+use Symfony\Component\HttpClient\HttpClient;
+
+include __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+
+$client = HttpClient::create();
+
+echo 'Gazeto init client' . PHP_EOL;
+
+$deviceToken = '';
+if (file_exists('/boot/gazeto-device-token.txt') === true) {
+    $deviceToken = file_get_contents('/boot/gazeto-device-token.txt');
+    echo 'Device token: ' . $deviceToken . PHP_EOL;
+} else {
+    echo 'Device token not set' . PHP_EOL;
+    exit(-100);
+}
+
+$authToken = '';
+$exchangeToken = '';
+if (file_exists('/boot/gazeto-exchange-token.txt') === true && file_exists('/boot/gazeto-auth-token.txt') === true) {
+    $authToken = file_get_contents('/boot/gazeto-auth-token.txt');
+    $exchangeToken = file_get_contents('/boot/gazeto-exchange-token.txt');
+    echo 'Auth token already set: ' . $authToken . PHP_EOL;
+    echo 'Exchange token already set: ' . $exchangeToken . PHP_EOL;
+} else {
+    $inviteResponse = $client->request('POST', 'https://www.markeigazeto.nl/api/invite', [
+        'body' => ['deviceToken' => $deviceToken]
+    ])->toArray();
+    if ($inviteResponse['code'] !== 'INVITE_CREATED') {
+        echo 'Invite declined' . PHP_EOL;
+        exit(-101);
+    }
+    $authToken = $inviteResponse['authToken'];
+    $exchangeToken = $inviteResponse['exchangeToken'];
+    file_put_contents('/boot/gazeto-auth-token.txt', $authToken);
+    file_put_contents('/boot/gazeto-exchange-token.txt', $exchangeToken);
+    echo 'Auth token pulled: ' . $authToken . PHP_EOL;
+    echo 'Exchange token pulled: ' . $exchangeToken . PHP_EOL;
+}
+
+$displayToken = '';
+if (file_exists('/boot/gazeto-display-token.txt') === true) {
+    $displayToken = file_get_contents('/boot/gazeto-display-token.txt');
+    echo 'Display token: ' . $displayToken . PHP_EOL;
+} else {
+    while(true) {
+        sleep(60);
+        echo 'Try to exchange token...' . PHP_EOL;
+        $exchangeResponse = $client->request('GET', 'https://www.markeigazeto.nl/api/invite', [
+            'headers' => ['Authorization' => 'Token ' . $exchangeToken]
+        ])->toArray();
+
+        if ($exchangeResponse['code'] === 'CLAIM_SUCCESS') {
+            $displayToken = $response['displayToken'];
+            echo 'Display token: ' . $displayToken . PHP_EOL;
+            file_put_contents('/boot/gazeto-display-token.txt', $response['displayToken']);
+            exec('systemctl reboot');
+        }
+    }
+}
+
+exit(0);
+

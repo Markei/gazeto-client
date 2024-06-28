@@ -1,0 +1,11 @@
+{
+    "name": "markei/gazeto-client",
+    "type": "project",
+    "require": {
+        "symfony/http-client": "^6.4"
+    },
+    "license": "MIT",
+    "autoload": {
+    },
+    "minimum-stability": "stable"
+}
