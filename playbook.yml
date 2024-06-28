@@ -41,6 +41,8 @@
         state: present
       become: "yes"
 
+    ### Custom boot logo
+
     - name: Copy theme
       ansible.builtin.copy:
         src: gazeto-plymouth-theme/
@@ -58,6 +60,8 @@
         cmd: plymouth-set-default-theme --rebuild-initrd gazeto-plymouth-theme
       become: "yes"
 
+    ### Custom wallpaper
+
     - name: Set wallpaper
       ansible.builtin.lineinfile:
         path: "{{ item.file }}"
@@ -68,10 +72,13 @@
         - { file: /etc/xdg/pcmanfm/LXDE-pi/desktop-items-1.conf }
       become: "yes"
 
+    ### Hide the mouse
+
     - name: Install interception-tools
       ansible.builtin.apt:
         name:
           - interception-tools
+          - interception-tools-compat
           - cmake
         state: present
       become: "yes"
@@ -95,7 +102,8 @@
 
     - name: Copy hideaway build result
       ansible.builtin.copy:
-        remote_src: /root/hideaway/build/hideaway
+        remote_src: "yes"
+        src: /root/hideaway/build/hideaway
         dest: /usr/bin/hideaway
         owner: root
         group: root
@@ -109,7 +117,38 @@
         dest: /etc/interception/udevmon.d/config.yaml
         owner: root
         group: root
-        mode: "u=rwx,g=rx,o=rx"
+        mode: "u=rw,g=r,o=r"
         force: "true"
       become: "yes"
 
+    ### Install services
+    - name: Install composer packages
+      community.general.composer:
+        command: install
+        working_dir: /opt/gazeto-client/client-controller
+      become: "yes"
+
+    - name: Install Gazeto services
+      ansible.builtin.copy:
+        src: "{{ item.file }}"
+        dest: "/etc/systemd/system/{{ item.file }}"
+        owner: root
+        group: root
+        mode: "u=rw,g=r,o=r"
+        force: "true"
+      loop:
+        - { file: gazeto-init.service, name: Gazeto Init }
+      loop_control:
+        label: "Install {{ item.name }}"
+      become: "yes"
+
+    - name: Enable Gazeto services
+      ansible.builtin.systemd_service:
+        name: "{{ item.service }}"
+        enabled: "true"
+        state: "started"
+      loop:
+        - { service: gazeto-init.service, name: Gazeto Init }
+      loop_control:
+        label: "Install {{ item.name }}"
+      become: "yes"
