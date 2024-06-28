@@ -39,3 +39,14 @@
           - git
         state: present
       become: "yes"
+
+    - name: Copy theme
+      ansible.builtin.copy:
+        src: gazeto-plymouth-theme/
+        dest: /usr/share/plymouth/themes/gazeto-plymouth-theme
+        force: "true"
+        owner: root
+        group: root
+        mode: "u=rw,g=r,o=r"
+        directory_mode: "u=rwx,g=rx,o=rx"
+      become: "yes"

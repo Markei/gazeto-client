@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=gazeto-plymouth-theme
+Description=Gazeto Splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/gazeto-plymouth-theme
+ScriptFile=/usr/share/plymouth/themes/gazeto-plymouth-theme/gazeto-plymouth-theme.script
