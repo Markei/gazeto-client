@@ -126,6 +126,10 @@
       community.general.composer:
         command: install
         working_dir: /opt/gazeto-client/client-controller
+        no_scripts: "true"
+        no_plugins: "true"
+      environment:
+        COMPOSER_ALLOW_SUPERUSER: "1"
       become: "yes"
 
     - name: Install Gazeto services
