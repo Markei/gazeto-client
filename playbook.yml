@@ -1,0 +1,41 @@
+---
+- name: Gazeto Client installer for RPi
+  hosts:
+    - localhost
+
+  tasks:
+    - name: Update package list
+      ansible.builtin.apt:
+        update_cache: yes
+      become: "yes"
+
+    - name: Update all installed packages
+      ansible.builtin.apt:
+        upgrade: "safe"
+      become: "yes"
+
+    - name: Install packages
+      ansible.builtin.apt:
+        name:
+          - nginx
+          - fbi
+          - php8.2-bcmath
+          - php8.2-cli
+          - php8.2-common
+          - php8.2-curl
+          - php8.2-gmp
+          - php8.2-intl
+          - php8.2-mbstring
+          - php8.2-opcache
+          - php8.2-sqlite3
+          - php8.2-xml
+          - php8.2-xsl
+          - php8.2-zip
+          - composer
+          - unzip
+          - zip
+          - htop
+          - ansible
+          - git
+        state: present
+      become: "yes"
