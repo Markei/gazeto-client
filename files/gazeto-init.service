@@ -1,0 +1,15 @@
+[Unit]
+Description=Gazeto init
+After=network-online.target
+Wants=network-online.target
+Conflicts=shutdown.target
+
+[Service]
+User=root
+ExecStart=php /opt/gazeto-client/client-controller/src/init.php
+WorkingDirectory=/opt/gazeto-client/client-controller
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,31 @@
+server {
+    set $displaytoken "__DISPLAYTOKEN__";
+    set $showurl "__SHOWURL__";
+
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    server_name _;
+
+    location = /local/token/auth {
+        root /boot;
+        try_files /gazeto-auth-token.txt =404;
+    }
+
+    location / {
+        if ($displaytoken ~ "^$") {
+            set $displaytoken "";
+        }
+        proxy_set_header Authorization "Token $displaytoken";
+        proxy_buffering off;
+        proxy_pass https://www.markeigazeto.nl/;
+        proxy_redirect default;
+    }
+
+    location = /client {
+        if ($showurl ~ "^$") {
+            set $showurl "/client/first-run";
+        }
+        return 303 http://localhost$showurl;
+    }
+}

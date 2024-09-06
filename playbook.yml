@@ -1,0 +1,225 @@
+---
+- name: Gazeto Client installer for RPi
+  hosts:
+    - localhost
+
+  tasks:
+    - name: Update package list
+      ansible.builtin.apt:
+        update_cache: yes
+      become: "yes"
+
+    - name: Update all installed packages
+      ansible.builtin.apt:
+        upgrade: "safe"
+      become: "yes"
+
+    - name: Install packages
+      ansible.builtin.apt:
+        name:
+          - nginx
+          - fbi
+          - php8.2-bcmath
+          - php8.2-cli
+          - php8.2-common
+          - php8.2-curl
+          - php8.2-gmp
+          - php8.2-intl
+          - php8.2-mbstring
+          - php8.2-opcache
+          - php8.2-sqlite3
+          - php8.2-xml
+          - php8.2-xsl
+          - php8.2-zip
+          - composer
+          - unzip
+          - zip
+          - htop
+          - ansible
+          - git
+          - screen
+          - inxi
+          - ttf-mscorefonts-installer
+          - fonts-open-sans
+          - cron-apt
+        state: present
+      become: "yes"
+
+    ### Custom boot logo
+
+    - name: Copy theme
+      ansible.builtin.copy:
+        src: gazeto-plymouth-theme/
+        dest: /usr/share/plymouth/themes/gazeto-plymouth-theme
+        force: "true"
+        owner: root
+        group: root
+        mode: "u=rw,g=r,o=r"
+        directory_mode: "u=rwx,g=rx,o=rx"
+      become: "yes"
+
+    - name: Download splash image
+      ansible.builtin.get_url:
+        url: https://www.markeigazeto.nl/client/splash.png
+        dest: /usr/share/plymouth/themes/gazeto-plymouth-theme/splash.png
+        force: "true"
+        owner: root
+        group: root
+        mode: "u=rw,g=r,o=r"
+      become: "yes"
+
+    - name: Build theme for initrd
+      when: "'Theme=gazeto-plymouth-theme' not in lookup('file', '/etc/plymouth/plymouthd.conf')"
+      ansible.builtin.command:
+        cmd: plymouth-set-default-theme --rebuild-initrd gazeto-plymouth-theme
+      become: "yes"
+
+    ### Custom wallpaper
+
+    - name: Set wallpaper
+      ansible.builtin.lineinfile:
+        path: "{{ item.file }}"
+        regexp: '^wallpaper='
+        line: wallpaper=/usr/share/plymouth/themes/gazeto-plymouth-theme/splash.png
+      loop:
+        - { file: /etc/xdg/pcmanfm/LXDE-pi/desktop-items-0.conf }
+        - { file: /etc/xdg/pcmanfm/LXDE-pi/desktop-items-1.conf }
+      become: "yes"
+
+    ### Hide the mouse
+
+    - name: Install interception-tools
+      ansible.builtin.apt:
+        name:
+          - interception-tools
+          - interception-tools-compat
+          - cmake
+        state: present
+      become: "yes"
+
+    - name: Clone hideaway repo
+      ansible.builtin.git:
+        clone: "true"
+        dest: /root/hideaway
+        repo: https://gitlab.com/interception/linux/plugins/hideaway.git
+        update: no
+      become: "yes"
+
+    - name: Build hideaway
+      ansible.builtin.command:
+        chdir: /root/hideaway
+        cmd: "{{ item }}"
+      loop:
+        - "cmake -B build -DCMAKE_BUILD_TYPE=Release"
+        - "cmake --build build"
+      become: "yes"
+
+    - name: Copy hideaway build result
+      ansible.builtin.copy:
+        remote_src: "yes"
+        src: /root/hideaway/build/hideaway
+        dest: /usr/bin/hideaway
+        owner: root
+        group: root
+        mode: "u=rwx,g=rx,o=rx"
+        force: "true"
+      become: "yes"
+
+    - name: Copy udevmon.d config file
+      ansible.builtin.copy:
+        src: udevmon.d/config.yaml
+        dest: /etc/interception/udevmon.d/config.yaml
+        owner: root
+        group: root
+        mode: "u=rw,g=r,o=r"
+        force: "true"
+      become: "yes"
+
+    ### Configure Nginx
+    - name: Copy Nginx default template
+      ansible.builtin.copy:
+        src: "nginx/default.template"
+        dest: "/etc/nginx/default.template"
+        owner: root
+        group: root
+        mode: "u=rw,g=r,o=r"
+        force: "true"
+      become: "yes"
+
+    - name: Replace tokens in template
+      ansible.builtin.command:
+        cmd: php /opt/gazeto-client/client-controller/src/update-nginx-conf.php
+      become: "yes"
+
+    ### Configure Firefox
+    - name: Copy Firefox policies
+      ansible.builtin.copy:
+        src: "firefox/policies.json"
+        dest: "/etc/firefox/policies.json"
+        owner: root
+        group: root
+        mode: "u=rw,g=r,o=r"
+        force: "true"
+      become: "yes"
+
+    ### Autostart Firefox
+    - name: Copy auto start file
+      ansible.builtin.copy:
+        src: "start.sh"
+        dest: "/home/pi/.config/start.sh"
+        owner: pi
+        group: pi
+        mode: "u=rwx,g=rx,o=rx"
+        force: true
+      become: "yes"
+
+    - name: Add autostart block in file
+      ansible.builtin.blockinfile:
+        path: /home/pi/.config/wayfire.ini
+#        block: |
+#          [autostart]
+#          runme = /usr/bin/chromium-browser --kiosk --kiosk-mode-incognito --kiosk-mode-no-prompts --kiosk-mode-no-dialogs http://localhost/client
+#        block: |
+#          [autostart]
+#          runme = sleep 5 && /usr/bin/firefox --display=:0 --kiosk-monitor 0 --private-window --kiosk http://localhost/client        block: |
+        block: |
+          [autostart]
+          runme = /home/pi/.config/start.sh
+
+    ### Install services
+    - name: Install composer packages
+      community.general.composer:
+        command: install
+        working_dir: /opt/gazeto-client/client-controller
+        no_scripts: "true"
+        no_plugins: "true"
+      environment:
+        COMPOSER_ALLOW_SUPERUSER: "1"
+      become: "yes"
+
+    - name: Install Gazeto services
+      ansible.builtin.copy:
+        src: "{{ item.file }}"
+        dest: "/etc/systemd/system/{{ item.file }}"
+        owner: root
+        group: root
+        mode: "u=rw,g=r,o=r"
+        force: "true"
+      loop:
+        - { file: gazeto-init.service, name: Gazeto Init }
+        - { file: gazeto-worker.service, name: Gazeto Worker }
+      loop_control:
+        label: "Install {{ item.name }}"
+      become: "yes"
+
+    - name: Enable Gazeto services
+      ansible.builtin.systemd_service:
+        name: "{{ item.service }}"
+        enabled: "true"
+        state: "started"
+      loop:
+        - { service: gazeto-init.service, name: Gazeto Init }
+        - { service: gazeto-worker.service, name: Gazeto Worker }
+      loop_control:
+        label: "Install {{ item.name }}"
+      become: "yes"
