@@ -36,7 +36,9 @@ while(true) {
                 'reboot' => reboot(...$task['args']),
                 'report' => report(...$task['args']),
                 'package-update' => packageUpdate(...$task['args']),
-                'gazeto-update' => gazetoUpdate(...$task['args'])
+                'gazeto-update' => gazetoUpdate(...$task['args']),
+                'refresh-urls' => refreshUrls(...$task['args']),
+                'write-screen-config' => writeScreenConfiguration(...$task['args']),
             };
             $client->request('POST', $task['report'], [
                 'body' => $result

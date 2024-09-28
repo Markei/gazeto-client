@@ -26,7 +26,8 @@ function report(): string {
         'date' => ['cmd' => ['date'], 'wd' => '/'],
         'ip' => ['cmd' => ['ip', 'a'], 'wd' => '/'],
         'cpu_info' => ['cmd' => ['cat', '/proc/cpuinfo'], 'wd' => '/'],
-        'gazeto_client' => ['cmd' => ['git', 'rev-parse', 'HEAD'], 'wd' => '/opt/gazeto-client']
+        'gazeto_client' => ['cmd' => ['git', 'rev-parse', 'HEAD'], 'wd' => '/opt/gazeto-client'],
+        'wayfire' => ['cmd' => ['cat', '/home/pi/.config/wayfire.ini'], 'wd' => '/']
     ];
 
     $output = [];
@@ -70,4 +71,59 @@ function gazetoUpdate(): string {
     $process->run();
 
     return $outputBuffer . "\r\n" . $process->getOutput();
+}
+
+function refreshUrls(): string {
+    global $client, $urls;
+    assert($client instanceof HttpClientInterface);
+
+    $response = $client->request('POST', 'https://www.markeigazeto.nl/api/display', [
+        'body' => [
+            'showUrl' => $urls['show']
+        ]
+    ]);
+
+    $data = $response->toArray();
+    file_put_contents('/boot/gazeto-urls.json', json_encode($data['urls']));
+
+    return $response->getContent();
+}
+
+function writeScreenConfiguration(): string {
+    global $client, $urls;
+    assert($client instanceof HttpClientInterface);
+
+    file_put_contents('/home/pi/.config/wayfire.ini_bak' . time(), file_get_contents('/home/pi/.config/wayfire.ini'));
+
+    $iniFile = parse_ini_file('/home/pi/.config/wayfire.ini', true, INI_SCANNER_RAW);
+
+    $displayConfig = $client->request('GET', $urls['settings'])->toArray();
+
+    foreach(['HDMI-A-1', 'HDMI-A-2'] as $key) {
+        if (isset($iniFile[$key]) === false) {
+            $iniFile[$key] = [];
+        }
+
+        if (isset($displayConfig['resolutionAndFrequency']) && !empty($displayConfig['resolutionAndFrequency'])) {
+            $iniFile[$key]['mode'] = $displayConfig['resolutionAndFrequency'];
+        }
+        if (isset($displayConfig['transform']) && !empty($displayConfig['transform'])) {
+            $iniFile[$key]['transform'] = $displayConfig['transform'];
+        }
+        if (isset($displayConfig['zoomLevel']) && !empty($displayConfig['zoomLevel'])) {
+            $iniFile[$key]['scale'] = $displayConfig['zoomLevel'];
+        }
+    }
+
+    $iniOutput = '';
+    foreach ($iniFile as $section => $options) {
+        $iniOutput .= '[' . $section . ']' . PHP_EOL;
+        foreach ($options as $k => $v) {
+            $iniOutput .= $k . ' = ' . $v . PHP_EOL;
+        }
+        $iniOutput .= PHP_EOL;
+    }
+    file_put_contents('/home/pi/.config/wayfire.ini', $iniOutput);
+
+    return $iniOutput;
 }
