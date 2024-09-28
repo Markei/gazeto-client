@@ -9,6 +9,11 @@
             "SkipOnboarding": true,
             "MoreFromMozilla": false,
             "Locked": false
+        },
+        "Permissions": {
+            "Autoplay": {
+                "Allow": ["https://www.markeigazeto.nl"]
+            }
         }
     }
 }
