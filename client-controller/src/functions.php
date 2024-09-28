@@ -46,14 +46,17 @@ function report(): string {
 
 function packageUpdate(): string {
     $process = new Process(['dpkg', '--configure', '-a']);
+    $process->setTimeout(null);
     $process->run();
     $outputBuffer = $process->getOutput();
 
     $process = new Process(['apt', 'update']);
+    $process->setTimeout(null);
     $process->run();
     $outputBuffer = $outputBuffer . "\r\n" . $process->getOutput();
 
     $process = new Process(['apt', 'upgrade', '-y']);
+    $process->setTimeout(null);
     $process->run();
     $outputBuffer = $outputBuffer . "\r\n" . $process->getOutput();
 
@@ -62,11 +65,13 @@ function packageUpdate(): string {
 
 function gazetoUpdate(): string {
     $process = new Process(['git', 'pull']);
+    $process->setTimeout(null);
     $process->setWorkingDirectory('/opt/gazeto-client');
     $process->run();
     $outputBuffer = $process->getOutput();
 
     $process = new Process(['ansible-playbook', 'playbook.yml']);
+    $process->setTimeout(null);
     $process->setWorkingDirectory('/opt/gazeto-client');
     $process->run();
 
