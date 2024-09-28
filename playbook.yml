@@ -152,10 +152,19 @@
       become: "yes"
 
     ### Configure Firefox
+    - name: Create Firefox policy directory
+      ansible.builtin.file:
+        path: "/etc/firefox/policies"
+        state: "directory"
+        user: root
+        group: root
+        mode: "u=rwx,g=rx,o=rx"
+      become: "yes"
+
     - name: Copy Firefox policies
       ansible.builtin.copy:
         src: "firefox/policies.json"
-        dest: "/etc/firefox/policies.json"
+        dest: "/etc/firefox/policies/policies.json"
         owner: root
         group: root
         mode: "u=rw,g=r,o=r"

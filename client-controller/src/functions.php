@@ -44,13 +44,19 @@ function report(): string {
 }
 
 function packageUpdate(): string {
-    $process = new Process(['apt', 'update']);
+    $process = new Process(['dpkg', '--configure', '-a']);
     $process->run();
     $outputBuffer = $process->getOutput();
 
+    $process = new Process(['apt', 'update']);
+    $process->run();
+    $outputBuffer = $outputBuffer . "\r\n" . $process->getOutput();
+
     $process = new Process(['apt', 'upgrade', '-y']);
     $process->run();
-    return $outputBuffer . "\r\n" . $process->getOutput();
+    $outputBuffer = $outputBuffer . "\r\n" . $process->getOutput();
+
+    return $outputBuffer;
 }
 
 function gazetoUpdate(): string {
