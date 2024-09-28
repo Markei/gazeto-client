@@ -3,16 +3,20 @@
         "DontCheckDefaultBrowser": true,
         "TranslateEnabled": false,
         "UserMessaging": {
+            "WhatsNew": true,
             "ExtensionRecommendations": false,
             "FeatureRecommendations": false,
             "UrlbarInterventions": false,
             "SkipOnboarding": true,
             "MoreFromMozilla": false,
+            "FirefoxLabs": false,
             "Locked": false
         },
         "Permissions": {
             "Autoplay": {
-                "Allow": ["https://www.markeigazeto.nl"]
+                "Allow": ["https://www.markeigazeto.nl"],
+                "Default": "allow-audio-video",
+                "Locked": true
             }
         }
     }
