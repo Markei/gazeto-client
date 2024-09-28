@@ -156,7 +156,7 @@
       ansible.builtin.file:
         path: "/etc/firefox/policies"
         state: "directory"
-        user: root
+        owner: root
         group: root
         mode: "u=rwx,g=rx,o=rx"
       become: "yes"
