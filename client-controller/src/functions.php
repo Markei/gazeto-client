@@ -104,7 +104,7 @@ function writeScreenConfiguration(): string {
 
     $displayConfig = $client->request('GET', $urls['settings'])->toArray();
 
-    foreach(['HDMI-A-1', 'HDMI-A-2'] as $key) {
+    foreach(['output:HDMI-A-1', 'output:HDMI-A-2'] as $key) {
         if (isset($iniFile[$key]) === false) {
             $iniFile[$key] = [];
         }
