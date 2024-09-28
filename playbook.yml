@@ -194,7 +194,7 @@
 #        block: |
 #          [autostart]
 #          runme = /home/pi/.config/start.sh
-      community.general.ini_file module:
+      community.general.ini_file:
         section: "autostart"
         option: runme
         value: /home/pi/.config/start.sh
