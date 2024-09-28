@@ -183,17 +183,23 @@
       become: "yes"
 
     - name: Add autostart block in file
-      ansible.builtin.blockinfile:
-        path: /home/pi/.config/wayfire.ini
+#      ansible.builtin.blockinfile:
+#        path: /home/pi/.config/wayfire.ini
 #        block: |
 #          [autostart]
 #          runme = /usr/bin/chromium-browser --kiosk --kiosk-mode-incognito --kiosk-mode-no-prompts --kiosk-mode-no-dialogs http://localhost/client
 #        block: |
 #          [autostart]
 #          runme = sleep 5 && /usr/bin/firefox --display=:0 --kiosk-monitor 0 --private-window --kiosk http://localhost/client        block: |
-        block: |
-          [autostart]
-          runme = /home/pi/.config/start.sh
+#        block: |
+#          [autostart]
+#          runme = /home/pi/.config/start.sh
+      community.general.ini_file module:
+        section: "autostart"
+        option: runme
+        value: /home/pi/.config/start.sh
+        state: present
+      become: "yes"
 
     ### Install services
     - name: Install composer packages
