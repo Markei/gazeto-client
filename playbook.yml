@@ -195,6 +195,7 @@
 #          [autostart]
 #          runme = /home/pi/.config/start.sh
       community.general.ini_file:
+        path: /home/pi/.config/wayfire.ini
         section: "autostart"
         option: runme
         value: /home/pi/.config/start.sh
