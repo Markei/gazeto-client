@@ -151,6 +151,16 @@
         cmd: php /opt/gazeto-client/client-controller/src/update-nginx-conf.php
       become: "yes"
 
+    - name: Replace Nginx service file
+      ansible.builtin.copy:
+        src: "nginx.service"
+        dest: "/lib/systemd/system/nginx.service"
+        owner: root
+        group: root
+        mode: "u=rw,g=r,o=r"
+        force: "true"
+      become: "yes"
+
     ### Configure Firefox
     - name: Create Firefox policy directory
       ansible.builtin.file:
