@@ -181,7 +181,7 @@
         force: "true"
       become: "yes"
 
-    ### Autostart Firefox
+    ### Autostart Firefox (Wayfire)
     - name: Copy auto start file
       ansible.builtin.copy:
         src: "start.sh"
@@ -211,6 +211,27 @@
         value: /home/pi/.config/start.sh
         state: present
       become: "yes"
+
+    ### Autostart Firefox (LXDE)
+    - name: Create profile directory
+      ansible.builtin.file:
+        path: "/home/pi/.config/lxsession/LXDE-pi"
+        recurse: true
+        state: "directory"
+        owner: pi
+        group: pi
+        mode: "u=rwx,g=rx,o=rx"
+      become: "yes"
+    - name: Create autostart file
+      ansible.builtin.copy:
+        src: "autostart"
+        dest: "/home/pi/.config/lxsession/LXDE-pi/autostart"
+        owner: pi
+        group: pi
+        mode: "u=rwx,g=rx,o=rx"
+        force: true
+      become: "yes"
+
 
     ### Install services
     - name: Install composer packages
