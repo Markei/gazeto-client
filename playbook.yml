@@ -41,6 +41,15 @@
           - inxi
           - ttf-mscorefonts-installer
           - fonts-open-sans
+          - fonts-karla
+          - fonts-roboto
+          - fonts-quicksand
+          - fonts-dancingscript
+          - fonts-ebgaramond
+          - fonts-lobster
+          - fonts-klee
+          - fonts-kaushanscript
+          - fonts-opendyslexic
           - cron-apt
         state: present
       become: "yes"
