@@ -18,6 +18,19 @@
                 "Default": "allow-audio-video",
                 "Locked": true
             }
+        },
+        "Preferences": {
+            "sidebar.revamp": {
+                "Value": false,
+                "Status": "locked"
+            }
+        },
+        "GenerativeAI": {
+            "Enabled": false,
+            "Chatbot": false,
+            "LinkPreviews": false,
+            "TabGroups": false,
+            "Locked": true
         }
     }
 }
