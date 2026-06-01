@@ -102,7 +102,7 @@
         regexp: '^wallpaper='
         line: wallpaper=/usr/share/plymouth/themes/gazeto-plymouth-theme/splash.png
       loop: "{{ wallpaper_config_files.results }}"
-      when: "{{ item.stat.exists }}"
+      when: "item.stat.exists"
       become: "yes"
 
     ### Hide the mouse
@@ -212,17 +212,6 @@
       become: "yes"
 
     - name: Add autostart block in file
-#      ansible.builtin.blockinfile:
-#        path: /home/pi/.config/wayfire.ini
-#        block: |
-#          [autostart]
-#          runme = /usr/bin/chromium-browser --kiosk --kiosk-mode-incognito --kiosk-mode-no-prompts --kiosk-mode-no-dialogs http://localhost/client
-#        block: |
-#          [autostart]
-#          runme = sleep 5 && /usr/bin/firefox --display=:0 --kiosk-monitor 0 --private-window --kiosk http://localhost/client        block: |
-#        block: |
-#          [autostart]
-#          runme = /home/pi/.config/start.sh
       community.general.ini_file:
         path: /home/pi/.config/wayfire.ini
         section: "autostart"
@@ -251,6 +240,16 @@
         force: true
       become: "yes"
 
+    ### Autostart Firefox (labwc)
+    - name: Create autostart desktop file
+      ansible.builtin.copy:
+        src: "autostart.desktop"
+        dest: "/home/pi/.config/autostart/autostart.destkop"
+        owner: pi
+        group: pi
+        mode: "u=rwx,g=rx,o=rx"
+        force: "true"
+      become: "yes"
 
     ### Install services
     - name: Install composer packages
