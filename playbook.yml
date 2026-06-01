@@ -85,14 +85,24 @@
 
     ### Custom wallpaper
 
-    - name: Set wallpaper
-      ansible.builtin.lineinfile:
+    - name: Check files
+      ansible.builtin.stat:
         path: "{{ item.file }}"
-        regexp: '^wallpaper='
-        line: wallpaper=/usr/share/plymouth/themes/gazeto-plymouth-theme/splash.png
       loop:
         - { file: /etc/xdg/pcmanfm/LXDE-pi/desktop-items-0.conf }
         - { file: /etc/xdg/pcmanfm/LXDE-pi/desktop-items-1.conf }
+        - { file: /etc/xdg/pcmanfm/default/desktop-items-0.conf }
+        - { file: /etc/xdg/pcmanfm/default/desktop-items-1.conf }
+      register: "wallpaper_config_files"
+      become: "yes"
+
+    - name: Set wallpaper
+      ansible.builtin.lineinfile:
+        path: "{{ item.item.file }}"
+        regexp: '^wallpaper='
+        line: wallpaper=/usr/share/plymouth/themes/gazeto-plymouth-theme/splash.png
+      loop: "{{ wallpaper_config_files.results }}"
+      when: "{{ item.stat.exists }}"
       become: "yes"
 
     ### Hide the mouse
